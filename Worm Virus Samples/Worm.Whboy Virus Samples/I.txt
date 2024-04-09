@@ -1,0 +1,2 @@
+Passwd: 52pojie
+需要将.vir改为.exe

@@ -1,0 +1,6 @@
+Password: pet
+Download url: https://pet.xiaoyuan151.xyz/
+指数：! ! !
+other:
+   启用安全模式: HKEY_CURRENT_USER\Software\Pet\SafeMode = 0x00000001
+   不支持的系统上使用: HKEY_CURRENT_USER\Software\Pet\AllowUnsupportSystem = 0x00000001

